@@ -1,8 +1,9 @@
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
+import { VideoProvider } from "@/context/VideoContext";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -103,7 +104,9 @@ function RootLayoutInner() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <RootLayoutInner />
+      <VideoProvider>
+        <RootLayoutInner />
+      </VideoProvider>
     </ThemeProvider>
   );
 }

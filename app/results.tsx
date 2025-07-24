@@ -1,5 +1,9 @@
+import { ThemeColors } from "@/constants/Colors";
+import { Layout } from "@/constants/Layout";
+import { useTheme } from "@/context/ThemeContext";
+import { useVideo } from "@/context/VideoContext";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useEffect } from "react";
 import {
@@ -19,16 +23,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { VideoResultCard } from "../components";
-import { ThemeColors } from "@/constants/Colors";
-import { Layout } from "@/constants/Layout";
-import { useTheme } from "@/context/ThemeContext";
-import { VideoResult } from "@/types";
 
 const { width, height } = Dimensions.get("window");
 
 export default function ResultsScreen() {
-  const { videoResult } = useLocalSearchParams<{ videoResult: string }>();
-  const result: VideoResult = videoResult ? JSON.parse(videoResult) : null;
+  const { current } = useVideo();
+  const result = current;
   const { colors } = useTheme();
 
   const slideAnimation = useSharedValue(height);

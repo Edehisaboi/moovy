@@ -1,9 +1,14 @@
+import type { ThemeColors } from "@/constants/Colors";
+import { Layout } from "@/constants/Layout";
+import { useTheme } from "@/context/ThemeContext";
+import { useVideo } from "@/context/VideoContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useRef, useState } from "react";
 import {
+  Image,
   Keyboard,
   StyleSheet,
   Text,
@@ -12,43 +17,45 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import Card from "../components/Card";
 import IconButton from "../components/IconButton";
-import type { ThemeColors } from "@/constants/Colors";
-import { Layout } from "@/constants/Layout";
-import { useTheme } from "@/context/ThemeContext";
 
-// Mock history data (sync with app/history.tsx)
-const mockHistory = [
-  { id: "1" },
-  { id: "2" },
-  { id: "3" },
-  // ...add up to 50 for demo
-];
-while (mockHistory.length < 50)
-  mockHistory.push({ id: String(mockHistory.length + 1) });
+const ICON_SOURCE = require("../assets/images/icon.png");
+const ICON_DARK_SOURCE = require("../assets/images/icon-dark.png");
 
 export default function HomeScreen() {
   const [search, setSearch] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef(null);
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
+  const { history } = useVideo();
 
-  const handleIdentifyVideo = () => {
-    router.push("/camera");
-  };
+  // Animation for pulsing (breathing) effect on the circle
+  const pulse = useSharedValue(0);
+  React.useEffect(() => {
+    // Infinite repeat, reversing back and forth
+    pulse.value = withRepeat(withTiming(1, { duration: 1500 }), -1, true);
+  }, []);
 
-  const handleHistory = () => {
-    router.push("/history");
-  };
+  const pulseStyle = useAnimatedStyle(() => {
+    const scale = interpolate(pulse.value, [0, 1], [1, 1.12]);
+    const opacity = interpolate(pulse.value, [0, 1], [0.85, 1]);
+    return {
+      transform: [{ scale }],
+      opacity,
+    };
+  });
 
-  const handleSettings = () => {
-    router.push("/settings");
-  };
-
-  // const handleWelcome = () => {
-  //   router.push("/welcome");
-  // };
+  const handleIdentifyVideo = () => router.push("/camera");
+  const handleHistory = () => router.push("/history");
+  const handleSettings = () => router.push("/settings");
 
   const handleCancelSearch = () => {
     setSearch("");
@@ -56,18 +63,11 @@ export default function HomeScreen() {
     Keyboard.dismiss();
   };
 
-  const handleBlur = () => {
-    setIsFocused(false);
-  };
-
-  const handleFocus = () => {
-    setIsFocused(true);
-  };
-
-  // Method for handling search submissions
+  const handleBlur = () => setIsFocused(false);
+  const handleFocus = () => setIsFocused(true);
   const handleSearch = () => {
     console.log("Search submitted:", search);
-    // Add your search logic here (e.g., filter videos, call API, etc.)
+    // Add your search logic here
   };
 
   return (
@@ -77,6 +77,7 @@ export default function HomeScreen() {
         style={styles(colors).container}
       >
         <StatusBar style="light" />
+
         {/* Header with search bar and icons */}
         <View style={styles(colors).headerContainer}>
           <Card style={styles(colors).searchBarCard} padding="small">
@@ -100,40 +101,36 @@ export default function HomeScreen() {
                 underlineColorAndroid="transparent"
                 onSubmitEditing={handleSearch}
               />
-              {isFocused || search.length > 0 ? (
+              {(isFocused || search.length > 0) && (
                 <TouchableOpacity
                   onPress={handleCancelSearch}
                   style={styles(colors).cancelButton}
                 >
                   <Text style={styles(colors).cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
-              ) : null}
+              )}
             </View>
           </Card>
           <View style={styles(colors).headerIcons}>
-            <IconButton
-              icon="settings-outline"
-              onPress={handleSettings}
-              style={styles(colors).headerIconButton}
-            />
+            <IconButton icon="settings-outline" onPress={handleSettings} />
           </View>
         </View>
 
         {/* Main Content */}
         <View style={styles(colors).content}>
-          {/* Main Button */}
           <View style={styles(colors).buttonContainer}>
-            <TouchableOpacity
-              style={styles(colors).mainButton}
-              onPress={handleIdentifyVideo}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="videocam" size={48} color={colors.background} />
+            <TouchableOpacity onPress={handleIdentifyVideo} activeOpacity={0.8}>
+              <Animated.View style={[styles(colors).logoWrapper, pulseStyle]}>
+                <Image
+                  source={isDarkMode ? ICON_DARK_SOURCE : ICON_SOURCE}
+                  style={styles(colors).logoImage}
+                  resizeMode="cover"
+                />
+              </Animated.View>
             </TouchableOpacity>
           </View>
-          {/* Tagline */}
           <Text style={styles(colors).tagline}>
-            Identify any video clip instantly
+            Tap to identify video clips
           </Text>
         </View>
 
@@ -144,7 +141,7 @@ export default function HomeScreen() {
               <View style={styles(colors).dockLeft}>
                 <Text style={styles(colors).dockTitle}>My Videos</Text>
                 <Text style={styles(colors).dockSubtitle}>
-                  {mockHistory.length} videos
+                  {history.length} videos
                 </Text>
               </View>
               <IconButton icon="time-outline" onPress={handleHistory} />
@@ -158,9 +155,7 @@ export default function HomeScreen() {
 
 const styles = (colors: ThemeColors) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-    },
+    container: { flex: 1 },
     headerContainer: {
       flexDirection: "row",
       alignItems: "center",
@@ -176,11 +171,7 @@ const styles = (colors: ThemeColors) =>
       minHeight: 44,
       justifyContent: "center",
     },
-    searchBarRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      width: "100%",
-    },
+    searchBarRow: { flexDirection: "row", alignItems: "center", width: "100%" },
     searchInput: {
       flex: 1,
       color: colors.text,
@@ -202,33 +193,23 @@ const styles = (colors: ThemeColors) =>
       fontSize: 16,
       fontWeight: "600",
     },
-    headerIcons: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 0,
-    },
-    headerIconButton: {
-      marginLeft: 4,
-    },
+    headerIcons: { flexDirection: "row", alignItems: "center" },
     content: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
       paddingHorizontal: Layout.spacing.lg,
     },
-    buttonContainer: {
-      position: "relative",
-      marginBottom: Layout.spacing.xxl,
-    },
-    mainButton: {
-      width: 160,
-      height: 160,
-      borderRadius: 80,
-      backgroundColor: colors.primary,
+    buttonContainer: { marginBottom: Layout.spacing.xxl },
+    logoWrapper: {
+      width: 180,
+      height: 180,
+      borderRadius: 90,
+      overflow: "hidden",
       justifyContent: "center",
       alignItems: "center",
-      alignSelf: "center",
     },
+    logoImage: { width: "140%", height: "140%" },
     tagline: {
       fontSize: 16,
       fontWeight: "bold",
@@ -239,7 +220,6 @@ const styles = (colors: ThemeColors) =>
     dockContainer: {
       paddingHorizontal: Layout.spacing.lg,
       paddingBottom: Layout.spacing.xl,
-      backgroundColor: "transparent",
     },
     dockCard: {
       backgroundColor: colors.surface,
@@ -252,17 +232,7 @@ const styles = (colors: ThemeColors) =>
       paddingVertical: Layout.spacing.md,
       paddingHorizontal: Layout.spacing.lg,
     },
-    dockLeft: {
-      flexDirection: "column",
-    },
-    dockTitle: {
-      color: colors.text,
-      fontSize: 18,
-      fontWeight: "bold",
-    },
-    dockSubtitle: {
-      color: colors.textSecondary,
-      fontSize: 14,
-      marginTop: 2,
-    },
+    dockLeft: { flexDirection: "column" },
+    dockTitle: { color: colors.text, fontSize: 18, fontWeight: "bold" },
+    dockSubtitle: { color: colors.textSecondary, fontSize: 14, marginTop: 2 },
   });

@@ -1,91 +1,25 @@
+import { Layout } from "@/constants/Layout";
+import { useTheme } from "@/context/ThemeContext";
+import { useVideo } from "@/context/VideoContext";
+import { VideoResult } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
-import { Dimensions, FlatList, StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import { Button, IconButton, VideoResultCard } from "../components";
-import { Layout } from "@/constants/Layout";
-import { useTheme } from "@/context/ThemeContext";
-import { HistoryItem } from "@/types";
-
-// const { width } = Dimensions.get("window");
-
-// Mock history data
-const mockHistory: HistoryItem[] = [
-  {
-    id: "1",
-    videoResult: {
-      id: "1",
-      title: "The Matrix",
-      posterUrl:
-        "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-      year: 1999,
-      director: "Lana Wachowski, Lilly Wachowski",
-      genre: "Sci-Fi, Action",
-      description:
-        "A computer programmer discovers a mysterious world of digital reality.",
-      trailerUrl: "https://www.youtube.com/watch?v=m8e-FF8MsqU",
-      imdbRating: 8.7,
-      duration: "2h 16m",
-      identifiedAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      source: "camera",
-    },
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-  },
-  {
-    id: "2",
-    videoResult: {
-      id: "2",
-      title: "Inception",
-      posterUrl:
-        "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
-      year: 2010,
-      director: "Christopher Nolan",
-      genre: "Sci-Fi, Thriller",
-      description:
-        "A thief who steals corporate secrets through dream-sharing technology.",
-      trailerUrl: "https://www.youtube.com/watch?v=YoHD9XEInc0",
-      imdbRating: 8.8,
-      duration: "2h 28m",
-      identifiedAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-      source: "screen",
-    },
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-  },
-  {
-    id: "3",
-    videoResult: {
-      id: "3",
-      title: "Interstellar",
-      posterUrl:
-        "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-      year: 2014,
-      director: "Christopher Nolan",
-      genre: "Sci-Fi, Drama",
-      description: "A team of explorers travel through a wormhole in space.",
-      trailerUrl: "https://www.youtube.com/watch?v=2LqzF5WauAw",
-      imdbRating: 8.6,
-      duration: "2h 49m",
-      identifiedAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-      source: "camera",
-    },
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-  },
-];
 
 export default function HistoryScreen() {
-  const [history, setHistory] = useState<HistoryItem[]>(mockHistory);
+  const { history, clearHistory, setCurrent } = useVideo();
   const { colors } = useTheme();
 
-  const handleItemPress = (item: HistoryItem) => {
-    router.push({
-      pathname: "/results",
-      params: { videoResult: JSON.stringify(item.videoResult) },
-    });
+  const handleItemPress = (item: VideoResult) => {
+    setCurrent(item);
+    router.push("/results");
   };
 
   const handleClearHistory = () => {
-    setHistory([]);
+    clearHistory();
   };
 
   const handleBack = () => {
@@ -93,12 +27,12 @@ export default function HistoryScreen() {
   };
 
   const handleStartIdentifying = () => {
-    router.push("/");
+    router.push("/camera");
   };
 
-  const renderHistoryItem = ({ item }: { item: HistoryItem }) => (
+  const renderHistoryItem = ({ item }: { item: VideoResult }) => (
     <VideoResultCard
-      video={item.videoResult}
+      video={item}
       variant="compact"
       showActions={false}
       onPress={() => handleItemPress(item)}

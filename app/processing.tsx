@@ -1,6 +1,10 @@
+import { ThemeColors } from "@/constants/Colors";
+import { Layout } from "@/constants/Layout";
+import { useTheme } from "@/context/ThemeContext";
+import { useVideo } from "@/context/VideoContext";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import React, { useEffect } from "react";
 import { Dimensions, StyleSheet, Text, View } from "react-native";
 import Animated, {
   interpolate,
@@ -10,17 +14,20 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { LoadingSpinner } from "../components";
-import { ThemeColors } from "@/constants/Colors";
-import { Layout } from "@/constants/Layout";
-import { useTheme } from "@/context/ThemeContext";
-import { VideoResult } from "@/types";
 
 const { width, height } = Dimensions.get("window");
 
 export default function ProcessingScreen() {
   const { source } = useLocalSearchParams<{ source: "camera" | "screen" }>();
-  const [progress, setProgress] = useState(0);
   const { colors } = useTheme();
+  const { progress, identifyVideo, setProgress } = useVideo();
+
+  useEffect(() => {
+    // Trigger identification on mount
+    identifyVideo({}, source || "camera");
+    // In a real implementation, progress should be updated by the API or background task.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const spinAnimation = useSharedValue(0);
   const pulseAnimation = useSharedValue(0);
@@ -39,43 +46,6 @@ export default function ProcessingScreen() {
       -1,
       true
     );
-
-    // Simulate processing progress
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          // Simulate successful identification
-          setTimeout(() => {
-            const mockResult: VideoResult = {
-              id: "1",
-              title: "The Matrix",
-              posterUrl:
-                "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-              year: 1999,
-              director: "Lana Wachowski, Lilly Wachowski",
-              genre: "Sci-Fi, Action",
-              description:
-                "A computer programmer discovers a mysterious world of digital reality.",
-              trailerUrl: "https://www.youtube.com/watch?v=m8e-FF8MsqU",
-              imdbRating: 8.7,
-              duration: "2h 16m",
-              identifiedAt: new Date(),
-              source: source || "camera",
-            };
-
-            router.replace({
-              pathname: "/results",
-              params: { videoResult: JSON.stringify(mockResult) },
-            });
-          }, 1000);
-          return prev;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 500);
-
-    return () => clearInterval(progressInterval);
   }, []);
 
   const spinStyle = useAnimatedStyle(() => {

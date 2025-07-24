@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "Moovy",
-    "slug": "moovy",
+    "name": "Moovio",
+    "slug": "moovio",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "moovy",
+    "scheme": "moovio",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "Moovy needs camera access to identify videos by recording clips.",
-        "NSMicrophoneUsageDescription": "Moovy needs microphone access to record video clips for identification.",
-        "NSPhotoLibraryUsageDescription": "Moovy needs photo library access to save identified video results."
+        "NSCameraUsageDescription": "Moovio needs camera access to identify videos by recording clips.",
+        "NSMicrophoneUsageDescription": "Moovio needs microphone access to record video clips for identification.",
+        "NSPhotoLibraryUsageDescription": "Moovio needs photo library access to save identified video results."
       }
     },
     "android": {
@@ -39,7 +39,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Moovy needs camera access to identify videos by recording clips."
+          "cameraPermission": "Moovio needs camera access to identify videos by recording clips."
         }
       ],
       [
